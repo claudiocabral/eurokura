@@ -1,11 +1,28 @@
 #pragma once
-#include <array>
+#include <type_support/array.h>
+#include <type_support/constants.h>
+#include <cmath>
 
-template <class UserData>
-class Audio {
-    constexpr static float sample_rate = 48'000.0f;
-    constexpr static float block_size = 128;
-    using audio_array = std::array<float, block_size>;
-    auto audioLoop(audio_array & input, audio_array & * output) {
+template <class FloatType>
+struct Wavetable {
+    void setFrequency(FloatType freq) {
+        phaseIncrement = std::sqrt(size * freq * tak::seconds_per_sample);
+        std::cout << phaseIncrement << "\n";
     }
-}
+    auto process_sample(FloatType input) {
+        int current = phase;
+        int next = current + 1;
+        FloatType remainder = phase - current;
+        FloatType output = wavetable[current] * remainder
+            + wavetable[next] * (1.0 - remainder);
+        phase = std::fmod(phase + phaseIncrement, wavetable.size() - 1);
+        return output;
+    }
+    private:
+    FloatType phase {0.0};
+    FloatType phaseIncrement {0.0};
+    static constexpr auto wavetable = tak::make_array<FloatType>(
+        -1.f, 1.f, -1.f
+    );
+    static constexpr auto size = wavetable.size() - 1;
+};
