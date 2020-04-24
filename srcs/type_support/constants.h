@@ -12,7 +12,7 @@
 #define TAK_BLOCK_SIZE 128
 #endif
 
-namespace tak {
+namespace kura {
 using float_type = TAK_FLOAT_TYPE;
 static constexpr float_type sample_rate = TAK_SAMPLE_RATE;
 static constexpr float_type seconds_per_sample = 1.0 / TAK_SAMPLE_RATE;

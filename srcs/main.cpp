@@ -7,7 +7,7 @@
 #include <generators/wavetable.h>
 
 
-using tak::float_type;
+using kura::float_type;
 using Generator = Wavetable<float_type>;
 using File = AudioFile<float_type>;
 constexpr std::string_view filename{"test.wav"};
@@ -15,11 +15,11 @@ constexpr std::string_view filename{"test.wav"};
 int main() {
     File file;
     file.setBitDepth(16);
-    file.setSampleRate(tak::sample_rate);
+    file.setSampleRate(kura::sample_rate);
     File::AudioBuffer buffer;
     buffer.resize(1);
     auto & channel = buffer.front();
-    channel.resize(tak::sample_rate * 10);
+    channel.resize(kura::sample_rate * 10);
 
     int i = 0;
     Generator generator;
