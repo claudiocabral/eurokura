@@ -1,0 +1,18 @@
+digraph {
+  labelloc="t";
+  label="Euclid\nTaktaktak"
+  splines=spline;
+  node [shape=record];
+  STM32F3 [label="{
+    {<Input1> Length | <Input2> Steps
+      | <Input3> Offset | <Input4> Reset
+        | <Input5> Trigger
+    }
+    | STM32F3 |
+    {<Output1>  Rhythm | <Output2> Start of Cycle}
+  }"];
+  STM32F3:Output1 -> "Output 1"
+  STM32F3:Output1 -> "Invert" -> "Output 2"
+  STM32F3:Output1 -> "Analog Slew" -> "Vactrol LPG (?)" -> "Output 3"
+  STM32F3:Output2 -> "Output 4"
+}
