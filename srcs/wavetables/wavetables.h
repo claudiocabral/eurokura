@@ -7,7 +7,7 @@ namespace kura {
 template <size_t table_size>
 struct table
 {
-    static constexpr auto center_around_zero(double val) { return val * 2.0f -1.0f; }
+    static constexpr auto center_around_zero(double val) { return val * 2.0 - 1.0; }
     static constexpr auto sine = make_wavetable<table_size>([](auto i, auto size) {
             const auto phase = two_pi * (static_cast<double>(i) / static_cast<double>(size));
             return std::sin(phase);
@@ -22,7 +22,7 @@ struct table
             return center_around_zero(signal);
             });
     static constexpr auto saw = make_wavetable<table_size>([](auto i, auto size) {
-            const auto signal = static_cast<double>(i) / static_cast<double>(size);
+            const auto signal = static_cast<double>(i) / static_cast<double>(size - 1);
             return center_around_zero(signal);
             });
     static constexpr auto triangle = make_wavetable<table_size>([](auto i, auto size) {

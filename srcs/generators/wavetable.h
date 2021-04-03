@@ -13,7 +13,7 @@ constexpr auto lerp(const auto &arr, const auto index)
 }
 
 
-constexpr auto quadratic_interpoation(const auto &arr, const auto index)
+constexpr auto quadratic_interpolation(const auto &arr, const auto index)
 {
     using Float = decltype(index);
     auto i = static_cast<size_t>(index) + 1;
@@ -31,20 +31,13 @@ struct Wavetable {
         phaseIncrement = size * freq * kura::seconds_per_sample;
     }
     auto process_sample([[maybe_unused]] FloatType input) {
-        //const auto output = lerp(wavetable, phase);
-        const auto output = quadratic_interpoation(wavetable, phase);
+        const auto output = quadratic_interpolation(wavetable, phase);
         phase += phaseIncrement;
-        while (phase > size) phase -= wavetable.size();
+        while (phase > size) phase -= size;
         return output;
     }
     FloatType phase {0.0};
     FloatType phaseIncrement {0.0};
     FloatType size = 4096;
     std::span<const FloatType> wavetable;
-    /*
-    static constexpr auto wavetable = kura::make_array<FloatType>(
-        -1.f, 1.f, -1.f
-    );
-    static constexpr auto size = wavetable.size() - 1;
-    */
 };
