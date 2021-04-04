@@ -4,27 +4,9 @@
 #include <span>
 #include <cmath>
 
-constexpr auto lerp(const auto &arr, const auto index)
+
+namespace kura
 {
-    using Float = decltype(index);
-    auto i = static_cast<size_t>(index);
-    Float t = index - i;
-    return arr[i] + (t * (arr[i + 1] - arr[i]));
-}
-
-
-constexpr auto quadratic_interpolation(const auto &arr, const auto index)
-{
-    using Float = decltype(index);
-    auto i = static_cast<size_t>(index) + 1;
-    Float t = index - i;
-    auto t_squared = t * t;
-    auto a = 0.5 * (arr[i + 1] + arr[i - 1]) - arr[i];
-    auto b = 0.5 * (arr[i + 1] - arr[i - 1]);
-    auto c = arr[i];
-    return a * t_squared + b * t + c;
-}
-
 template <class FloatType>
 struct Wavetable {
     void setFrequency(FloatType freq) {
@@ -41,3 +23,4 @@ struct Wavetable {
     FloatType size = 4096;
     std::span<const FloatType> wavetable;
 };
+}

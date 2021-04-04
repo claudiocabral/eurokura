@@ -1,37 +1,25 @@
 #pragma once
-#include <generators/wavetable.h>
+#include <math/interpolation.h>
+#include <span>
 
 namespace kura
 {
-    struct Envelope
+    struct MultiStageEnvelope
     {
-        double attack{10.0};
-        double decay{100.0};
         double phase{0.0};
-        double value{0.0};
-        static constexpr auto table = std::array
-        {
-            0.0, 1.0, 0.0, 0.0
-        };
+        std::span<double> value_table;
+        std::span<double> time_table;
         auto process(double sample_rate)
         {
             auto ms = sample_rate / 1000.0;
-            double increment_stage = 0.0;
-            if (phase < 1.0)
-            {
-                increment_stage = attack;
-            }
-            else if(phase < 2.0)
-            {
-                increment_stage = decay;
-            }
-            else
-            {
-                return 0.0;
-            }
-            const auto output = quadratic_interpolation(table, phase);
-            phase += 1.0 / (increment_stage * ms);
-            return output;
+            auto [i, t] = split_float(phase);
+            if (i >= time_table.size()) return 0.0;
+            phase += 1.0 / ((time_table[i] * ms));
+            return lerp(value_table[i + 0], value_table[i + 1], t);
+        }
+        auto duration() const
+        {
+            return std::accumulate(std::begin(time_table), std::end(time_table), 0.0);
         }
         auto reset()
         {

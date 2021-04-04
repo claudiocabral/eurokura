@@ -13,7 +13,7 @@ constexpr auto make_wavetable(Func && f)
     output[size + 0] = output[0];
     output[size + 1] = output[1];
     output[size + 2] = output[2];
-    static_assert(output.size() > size + 2);
+    static_assert(output.size() == size + 3);
     return output;
 }
 }
