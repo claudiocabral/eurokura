@@ -3,6 +3,7 @@
 #include <random>
 
 #include <AudioFile.h>
+#include <gcem.hpp>
 
 #include <type_support/constants.h>
 #include <wavetables/wavetables.h>
@@ -15,7 +16,7 @@ constexpr std::string_view filename{"test.wav"};
 
 constexpr auto scale(double base_freq)
 {
-    auto factor = std::pow(2, 1.0 / 12.0);
+    auto factor = gcem::pow(2, 1.0 / 12.0);
     std::array<double, 12> TET;
     for(auto & note : TET)
     {
