@@ -12,6 +12,7 @@ add_executable(${BINARY}
   )
 target_include_directories(${BINARY} PRIVATE
   AudioFile
+  gcem/include
   srcs
   )
 
