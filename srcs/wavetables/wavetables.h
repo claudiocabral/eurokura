@@ -1,3 +1,4 @@
+#include <gcem.hpp>
 #include <wavetables/wavetable_generator.h>
 #include <cmath>
 #include <numbers>
@@ -10,11 +11,11 @@ struct table
     static constexpr auto center_around_zero(double val) { return val * 2.0 - 1.0; }
     static constexpr auto sine = make_wavetable<table_size>([](auto i, auto size) {
             const auto phase = two_pi * (static_cast<double>(i) / static_cast<double>(size));
-            return std::sin(phase);
+            return gcem::sin(phase);
             });
     static constexpr auto cosine = make_wavetable<table_size>([](auto i, auto size) {
             const auto phase = two_pi * (static_cast<double>(i) / static_cast<double>(size));
-            return std::cos(phase);
+            return gcem::cos(phase);
             });
     static constexpr auto square = make_wavetable<table_size>([](auto i, auto size) {
             const auto half = size / 2;
