@@ -15,7 +15,7 @@ static constexpr auto split_float(const auto index)
     };
     return ret;
 }
-static constexpr auto lerp(const auto &a, const auto & b, const auto normalized_index)
+static constexpr auto lerp(auto a, auto b, auto normalized_index)
 {
     return a + (normalized_index * (b - a));
 }
@@ -26,7 +26,7 @@ static constexpr auto lerp(const auto &arr, const auto index)
     return lerp(arr[i], arr[i + 1], t);
 }
 
-static constexpr auto quadratic_interpolation(const auto &a, const auto &b, const auto &c, const auto &t)
+static constexpr auto quadratic_interpolation(float a, float b, float c, float t)
 {
     const auto t_squared = t * t;
     const auto x0 = 0.5 * (c + a) - b;
@@ -39,7 +39,7 @@ static constexpr auto quadratic_interpolation(const auto &a, const auto &b, cons
 static constexpr auto quadratic_interpolation(const auto &arr, const auto index)
 {
     auto i = static_cast<size_t>(index);
-    auto t = index - static_cast<size_t>(index);
+    auto t = index - i;
     return quadratic_interpolation(arr[i - 1], arr[i], arr[i + 1], t);
 }
 }

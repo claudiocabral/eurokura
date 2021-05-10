@@ -3,55 +3,61 @@
 #include <random>
 
 #include <AudioFile.h>
-#include <gcem.hpp>
 
 #include <type_support/constants.h>
 #include <wavetables/wavetables.h>
 #include <generators/envelope.h>
 #include <generators/wavetable.h>
+#include <generators/view_generator.h>
+#include <generators/dx7.h>
+#include <generators/scale.h>
 
 
-using File = AudioFile<double>;
+
+using File = AudioFile<float>;
 constexpr std::string_view filename{"test.wav"};
 
-constexpr auto scale(double base_freq)
-{
-    auto factor = gcem::pow(2, 1.0 / 12.0);
-    std::array<double, 12> TET;
-    for(auto & note : TET)
-    {
-        note = base_freq;
-        base_freq *= factor;
-    }
-    return std::array {
-        TET[0],
-        //TET[2],
-        TET[4],
-        //TET[5],
-        TET[7],
-        //TET[9],
-        TET[11],
-        TET[0] * 2
-    };
-}
+constexpr auto major_chord = select_scale_degrees(
+        make_equal_temperament<12>(220),
+        0,
+        4,
+        7,
+        11,
+        12
+        );
 
-constexpr auto major = scale(220);
-
-template <class ValueContainer, class TimeContainer>
+template <class ValueContainer = char[1], class TimeContainer = char[1]>
 struct EnvelopeContainer
 {
-    ValueContainer envelope_value;
-    TimeContainer envelope_time;
-    kura::MultiStageEnvelope envelope { 0.0, envelope_value, envelope_time };
+    using Self = EnvelopeContainer<ValueContainer, TimeContainer>;
+    ValueContainer values;
+    TimeContainer times;
+    kura::MultiStageEnvelope envelope;
+    auto & operator()() { return envelope; };
+
+    template <class T, class U>
+    static constexpr auto make(T && values, U && times)
+    {
+        return EnvelopeContainer<T, U> {
+            .values{values},
+            .times{times},
+            .envelope{kura::MultiStageEnvelope::make(values, times)},
+        };
+    }
 };
 
 struct SynthVoice
 {
-    std::array<double, 4> envelope_value{ 0.0, 1.0, 0.0, 0.0 };
-    std::array<double, 2> envelope_time{ 10.0, 100.0 };
-    kura::MultiStageEnvelope envelope { 0.0, envelope_value, envelope_time };
-    kura::Wavetable<double> wavetable;
-    double time;
+    std::array<float, 4> envelope_value{ 0.0, 1.0, 0.0, 0.0 };
+    std::array<float, 2> envelope_time{ 10.0, 100.0 };
+    kura::MultiStageEnvelope envelope = kura::MultiStageEnvelope::make(
+        envelope_value,
+        envelope_time
+    );
+    kura::Wavetable wavetable;
+    float time;
+    float value;
+    float delay = 0.0;
 };
 
 int main() {
@@ -60,35 +66,35 @@ int main() {
     std::cout << "seed is " << seed << std::endl;
     std::mt19937 gen(seed);
     std::uniform_int_distribution<> env(100, 5000);
-    std::uniform_int_distribution<> distrib(0, major.size() - 1);
+    std::uniform_int_distribution<> distrib(0, major_chord.size() - 1);
     File file;
     file.setBitDepth(16);
     file.setSampleRate(kura::sample_rate);
     File::AudioBuffer buffer;
     buffer.resize(1);
     auto & channel = buffer.front();
-    double file_duration = 60.0;
-    double xfade_begin = 10.0;
-    double xfade_end = xfade_begin;
+    float file_duration = 60.0f;
+    float xfade_begin = 1.0f;
+    float xfade_end = xfade_begin;
     channel.resize(kura::sample_rate * file_duration);
 
-    kura::MultiStageEnvelope file_envelope;
-    auto file_levels = std::array { 0.0, 1.0, 1.0, 0.0, 0.0 };
-    auto file_times = std::array { xfade_begin * 1000.0, (file_duration - xfade_begin - xfade_end) * 1000.0, xfade_end * 1000.0 };
-    file_envelope.value_table = file_levels;
-    file_envelope.time_table = file_times;
+    auto file_levels = std::array { 0.0f, 1.0f, 1.0f, 0.0f, 0.0f };
+    auto file_times = std::array {
+        xfade_begin * 1000.0f,
+        (file_duration - xfade_begin - xfade_end) * 1000.0f,
+        xfade_end * 1000.0f
+    };
+    auto file_envelope = kura::MultiStageEnvelope::make(file_levels, file_times);
 
 
     std::array<SynthVoice, 4> voices;
 
 
-    double now = 0;
+    float now = 0;
     for (auto & voice : voices)
     {
-        voice.wavetable.wavetable = std::span {
-            kura::table<4096>::sine
-        };
-        voice.wavetable.setFrequency(440);
+        voice.wavetable = kura::Wavetable::make(kura::table<4096>::sine);
+        voice.wavetable.set_frequency(440);
         voice.time = -100000.0;
     }
     for (auto & sample : channel)
@@ -96,28 +102,33 @@ int main() {
         sample = 0.0;
         for (auto &voice : voices)
         {
-            constexpr double amplitude = 0.5 * 0.25;
+            constexpr float amplitude = 0.5 * 0.25;
             auto & w = voice.wavetable;
             auto & envelope = voice.envelope;
             auto & time = voice.time;
-            double duration =  envelope.duration() / 1000.0;
-            bool time_ellapsed = now - time > duration;
-            if (time_ellapsed)
+
+            if (envelope.done())
             {
                 time = now;
                 envelope.reset();
-                envelope.time_table[0] = env(gen);
-                envelope.time_table[1] = env(gen);
-                w.setFrequency(major[distrib(gen)]);
+                voice.envelope_time[0] = env(gen);
+                voice.envelope_time[1] = env(gen);
+                w.set_frequency(major_chord[distrib(gen)]);
             }
-            double output = w.process_sample(0.0) * amplitude;
-            output *= envelope.process(kura::sample_rate);
+            //attempt at phase feedback
+            const auto env = envelope.process(kura::sample_rate);
+            auto delay = voice.delay;// * voice.delay;
+            auto phase = (delay) * 1024.0 * 0.6;// * env;
+            
+            float output = w.process_sample(phase);
+            voice.delay = output;
+            output *= amplitude * env;
             sample += output;
         }
         sample *= file_envelope.process(kura::sample_rate);
-        now += kura::seconds_per_sample;
+        now += kura::sample_duration;
     }
-    file.setAudioBuffer(buffer);
-    file.printSummary();
-    file.save(std::string(filename));
+    //file.setAudioBuffer(buffer);
+    //file.printSummary();
+    //file.save(std::string(filename));
 }

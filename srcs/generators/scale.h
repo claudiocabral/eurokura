@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <gcem.hpp>
 
 template <size_t divisions>
 constexpr auto make_equal_temperament(float base_freq)
