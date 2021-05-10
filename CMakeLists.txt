@@ -25,6 +25,6 @@ set_target_properties(${BINARY}
 
 target_compile_options(${BINARY} PUBLIC
   $<$<CXX_COMPILER_ID:GNU>: -ffast-math>
-  #$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror >
+  $<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror >
   #$<$<CXX_COMPILER_ID:MSVC>: /W4 >
     )
