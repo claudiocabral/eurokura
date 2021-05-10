@@ -2,7 +2,7 @@
 
 namespace kura
 {
-constexpr auto split_float(const auto index)
+static constexpr auto split_float(const auto index)
 {
     struct
     {
@@ -15,29 +15,31 @@ constexpr auto split_float(const auto index)
     };
     return ret;
 }
-constexpr auto lerp(const auto &a, const auto & b, const auto normalized_index)
+static constexpr auto lerp(const auto &a, const auto & b, const auto normalized_index)
 {
     return a + (normalized_index * (b - a));
 }
 
-constexpr auto lerp(const auto &arr, const auto index)
+static constexpr auto lerp(const auto &arr, const auto index)
 {
     auto && [i, t] = split_float(index);
     return lerp(arr[i], arr[i + 1], t);
 }
-constexpr auto quadratic_interpolation(const auto &a, const auto &b, const auto &c, const auto &t)
+
+static constexpr auto quadratic_interpolation(const auto &a, const auto &b, const auto &c, const auto &t)
 {
-    auto t_squared = t * t;
-    auto x0 = 0.5 * (c + a) - b;
-    auto x1 = 0.5 * (c - a);
-    auto x2 = b;
+    const auto t_squared = t * t;
+    const auto x0 = 0.5 * (c + a) - b;
+    const auto x1 = 0.5 * (c - a);
+    const auto x2 = b;
     return x0 * t_squared + x1 * t + x2;
 }
 
 
-constexpr auto quadratic_interpolation(const auto &arr, const auto index)
+static constexpr auto quadratic_interpolation(const auto &arr, const auto index)
 {
-    auto && [i, t] = split_float(index + 1);
+    auto i = static_cast<size_t>(index);
+    auto t = index - static_cast<size_t>(index);
     return quadratic_interpolation(arr[i - 1], arr[i], arr[i + 1], t);
 }
 }
